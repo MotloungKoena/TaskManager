@@ -2,13 +2,14 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
 using TaskManager.API.Data;
 using TaskManager.API.Models;
+using TaskManager.API.Hubs;   
 
 var builder = WebApplication.CreateBuilder(args);
 
- 
 // Add CORS
 builder.Services.AddCors(options =>
 {
@@ -18,7 +19,7 @@ builder.Services.AddCors(options =>
             policy.WithOrigins("http://localhost:5173")
                   .AllowAnyHeader()
                   .AllowAnyMethod()
-                  .AllowCredentials();
+                  .AllowCredentials();  //for Signal R
         });
 });
 
@@ -51,7 +52,7 @@ builder.Services.AddAuthentication(options =>
             Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "DefaultKey12345678901234567890"))
     };
 
-    // For SignalR
+    // For SignalR - get token from query string
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
@@ -77,7 +78,34 @@ builder.Services.AddControllers();
 
 // Add Swagger
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "TaskManager.API", Version = "v1" });
+
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 var app = builder.Build();
 
@@ -97,7 +125,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Map SignalR Hub  
-// app.MapHub<ChatHub>("/chathub");
+// Map SignalR Hub
+app.MapHub<ChatHub>("/chathub");
 
 app.Run();
