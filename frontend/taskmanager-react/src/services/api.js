@@ -55,4 +55,22 @@ export const dashboardApi = {
   getSummary: () => api.get('/Dashboard/summary'),
 };
 
+// Users API calls
+export const usersApi = {
+  getProfile: () => api.get('/Users/profile'),
+  updateProfile: (data) => api.put('/Users/profile', data),
+  uploadAvatar: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/Users/upload-avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+  deleteAvatar: () => api.delete('/Users/avatar'),
+  getUsers: (search) => api.get('/Users', { params: { search } }),
+  getUser: (id) => api.get(`/Users/${id}`),
+};
+
 export default api;

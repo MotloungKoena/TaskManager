@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { dashboardApi } from '../services/api';
 import toast from 'react-hot-toast';
+import Avatar from '../components/Avatar';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -21,28 +22,28 @@ const Dashboard = () => {
     try {
       setLoading(true);
       console.log('Fetching dashboard data...');
-      
+
       const response = await dashboardApi.getSummary();
       console.log('Dashboard response:', response.data);
-      
+
       const data = response.data;
-      
+
       setProjectCount(data.projectCount || 0);
       setTaskCount(data.taskCount || 0);
       setMemberCount(data.memberCount || 0);
       setRecentProjects(data.recentProjects || []);
       setTaskStatusBreakdown(data.taskStatusBreakdown || []);
-      
+
     } catch (error) {
       console.error('Error loading dashboard data:', error);
-      
+
       // Check if it's an authentication error
       if (error.response?.status === 401) {
         toast.error('Please login again');
         logout();
         return;
       }
-      
+
       toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
@@ -60,10 +61,14 @@ const Dashboard = () => {
                 <div className="flex space-x-4">
                   <Link to="/dashboard" className="text-gray-700 hover:text-gray-900">Dashboard</Link>
                   <Link to="/projects" className="text-gray-700 hover:text-gray-900">Projects</Link>
+                  <Link to="/profile" className="text-gray-700 hover:text-gray-900">Profile</Link>
                 </div>
               </div>
               <div className="flex items-center space-x-4">
-                <span className="text-gray-700">Welcome, {user?.fullName || user?.email}</span>
+                <div className="flex items-center space-x-2">
+                  <Avatar user={user} size="sm" showStatus={true} />
+                  <span className="text-gray-700">Welcome, {user?.fullName || user?.email}</span>
+                </div>
                 <button
                   onClick={logout}
                   className="px-3 py-2 text-sm font-medium text-red-600 hover:text-red-800"
@@ -91,10 +96,14 @@ const Dashboard = () => {
               <div className="flex space-x-4">
                 <Link to="/dashboard" className="text-gray-700 hover:text-gray-900">Dashboard</Link>
                 <Link to="/projects" className="text-gray-700 hover:text-gray-900">Projects</Link>
+                <Link to="/profile" className="text-gray-700 hover:text-gray-900">Profile</Link>
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-gray-700">Welcome, {user?.fullName || user?.email}</span>
+              <div className="flex items-center space-x-2">
+                <Avatar user={user} size="sm" showStatus={true} />
+                <span className="text-gray-700">Welcome, {user?.fullName || user?.email}</span>
+              </div>
               <button
                 onClick={logout}
                 className="px-3 py-2 text-sm font-medium text-red-600 hover:text-red-800"
@@ -110,7 +119,7 @@ const Dashboard = () => {
         <div className="bg-white shadow rounded-lg p-6">
           <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
           <p className="mt-2 text-gray-600">Welcome to your TaskManager dashboard! 🎉</p>
-          
+
           {/* Summary Cards */}
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-blue-50 p-4 rounded-lg">
@@ -120,13 +129,13 @@ const Dashboard = () => {
                 View all →
               </Link>
             </div>
-            
+
             <div className="bg-green-50 p-4 rounded-lg">
               <h3 className="font-semibold text-green-900">Tasks</h3>
               <p className="text-3xl font-bold text-green-600">{taskCount}</p>
               <span className="text-sm text-green-600">Across all projects</span>
             </div>
-            
+
             <div className="bg-purple-50 p-4 rounded-lg">
               <h3 className="font-semibold text-purple-900">Team Members</h3>
               <p className="text-3xl font-bold text-purple-600">{memberCount}</p>
@@ -141,12 +150,11 @@ const Dashboard = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {taskStatusBreakdown.map((item) => (
                   <div key={item.status} className="bg-gray-50 rounded-lg p-3 text-center">
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                      item.status === 'Done' ? 'bg-green-100 text-green-800' :
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${item.status === 'Done' ? 'bg-green-100 text-green-800' :
                       item.status === 'InProgress' ? 'bg-blue-100 text-blue-800' :
-                      item.status === 'Review' ? 'bg-purple-100 text-purple-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
+                        item.status === 'Review' ? 'bg-purple-100 text-purple-800' :
+                          'bg-gray-100 text-gray-800'
+                      }`}>
                       {item.status}
                     </span>
                     <p className="text-2xl font-bold text-gray-700 mt-1">{item.count}</p>
@@ -171,8 +179,8 @@ const Dashboard = () => {
                       <span>{project.taskCount || 0} tasks</span>
                       <span>{project.memberCount || 1} members</span>
                     </div>
-                    <Link 
-                      to="/projects" 
+                    <Link
+                      to="/projects"
                       className="text-xs text-blue-600 hover:text-blue-800 mt-2 inline-block"
                     >
                       View details →
@@ -182,7 +190,7 @@ const Dashboard = () => {
               </div>
             </div>
           )}
-          
+
           {/* If no data */}
           {projectCount === 0 && taskCount === 0 && memberCount === 0 && (
             <div className="mt-8 p-8 text-center bg-gray-50 rounded-lg">

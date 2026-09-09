@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { Link } from 'react-router-dom';
 import { projectsApi } from '../services/api';
 import TaskList from '../components/TaskList';
 import Chat from '../components/Chat';
-import ProjectMembers from '../components/ProjectMembers';   
+import ProjectMembers from '../components/ProjectMembers';
+import Avatar from '../components/Avatar';
 import toast from 'react-hot-toast';
 
 const Projects = () => {
+  const { user, logout } = useAuth();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
   const [expandedProject, setExpandedProject] = useState(null);
-  const { user } = useAuth();
 
   useEffect(() => {
     loadProjects();
@@ -69,82 +71,141 @@ const Projects = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-gray-600">Loading projects...</div>
+      <div className="min-h-screen bg-gray-100">
+        <nav className="bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between h-16">
+              <div className="flex items-center space-x-8">
+                <h1 className="text-xl font-semibold text-gray-900">TaskManager</h1>
+                <div className="flex space-x-4">
+                  <Link to="/dashboard" className="text-gray-700 hover:text-gray-900">Dashboard</Link>
+                  <Link to="/projects" className="text-gray-700 hover:text-gray-900">Projects</Link>
+                  <Link to="/profile" className="text-gray-700 hover:text-gray-900">Profile</Link>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <Avatar user={user} size="sm" showStatus={true} />
+                  <span className="text-gray-700">Welcome, {user?.fullName || user?.email}</span>
+                </div>
+                <button
+                  onClick={logout}
+                  className="px-3 py-2 text-sm font-medium text-red-600 hover:text-red-800"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        </nav>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-gray-600">Loading projects...</div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Projects</h2>
-        <button
-          onClick={() => setShowModal(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        >
-          + New Project
-        </button>
-      </div>
-
-      {projects.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-8 text-center">
-          <p className="text-gray-600">No projects yet. Create your first project!</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((project) => (
-            <div key={project.id} className="bg-white rounded-lg shadow hover:shadow-lg transition p-6">
-              <div className="flex justify-between items-start">
-                <h3 className="text-lg font-semibold text-gray-900">{project.name}</h3>
-                <button
-                  onClick={() => handleDeleteProject(project.id)}
-                  className="text-red-500 hover:text-red-700 text-sm"
-                >
-                  Delete
-                </button>
+    <div className="min-h-screen bg-gray-100">
+      {/* Navigation Bar */}
+      <nav className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center space-x-8">
+              <h1 className="text-xl font-semibold text-gray-900">TaskManager</h1>
+              <div className="flex space-x-4">
+                <Link to="/dashboard" className="text-gray-700 hover:text-gray-900">Dashboard</Link>
+                <Link to="/projects" className="text-blue-600 hover:text-blue-800 font-medium">Projects</Link>
+                <Link to="/profile" className="text-gray-700 hover:text-gray-900">Profile</Link>
               </div>
-              <p className="text-gray-600 text-sm mt-2">{project.description || 'No description'}</p>
-              <div className="mt-4 flex justify-between text-sm text-gray-500">
-                <span>{project.memberCount || 0} members</span>
-                <span className="font-semibold text-blue-600">{project.taskCount || 0} tasks</span>
-              </div>
-              <div className="mt-2 text-xs text-gray-400">
-                Created {new Date(project.createdAt).toLocaleDateString()}
-              </div>
-              
-              <button
-                onClick={() => toggleProjectExpand(project.id)}
-                className="mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium"
-              >
-                {expandedProject === project.id ? 'Hide Details' : 'View Details'}
-              </button>
-              
-              {expandedProject === project.id && (
-                <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
-                  {/* Tasks Section */}
-                  <div>
-                    <TaskList 
-                      projectId={project.id} 
-                      onTaskChange={handleTaskChange} 
-                    />
-                  </div>
-                  
-                  {/* Members Section */}
-                  <div className="pt-4 border-t border-gray-200">
-                    <ProjectMembers projectId={project.id} />
-                  </div>
-                  
-                  {/* Chat Section */}
-                  <div className="pt-4 border-t border-gray-200">
-                    <Chat projectId={project.id} />
-                  </div>
-                </div>
-              )}
             </div>
-          ))}
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <Avatar user={user} size="sm" showStatus={true} />
+                <span className="text-gray-700">Welcome, {user?.fullName || user?.email}</span>
+              </div>
+              <button
+                onClick={logout}
+                className="px-3 py-2 text-sm font-medium text-red-600 hover:text-red-800"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
         </div>
-      )}
+      </nav>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">Projects</h2>
+          <button
+            onClick={() => setShowModal(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            + New Project
+          </button>
+        </div>
+
+        {projects.length === 0 ? (
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <p className="text-gray-600">No projects yet. Create your first project!</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {projects.map((project) => (
+              <div key={project.id} className="bg-white rounded-lg shadow hover:shadow-lg transition p-6">
+                <div className="flex justify-between items-start">
+                  <h3 className="text-lg font-semibold text-gray-900">{project.name}</h3>
+                  <button
+                    onClick={() => handleDeleteProject(project.id)}
+                    className="text-red-500 hover:text-red-700 text-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
+                <p className="text-gray-600 text-sm mt-2">{project.description || 'No description'}</p>
+                <div className="mt-4 flex justify-between text-sm text-gray-500">
+                  <span>{project.memberCount || 0} members</span>
+                  <span className="font-semibold text-blue-600">{project.taskCount || 0} tasks</span>
+                </div>
+                <div className="mt-2 text-xs text-gray-400">
+                  Created {new Date(project.createdAt).toLocaleDateString()}
+                </div>
+                
+                <button
+                  onClick={() => toggleProjectExpand(project.id)}
+                  className="mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  {expandedProject === project.id ? 'Hide Details' : 'View Details'}
+                </button>
+                
+                {expandedProject === project.id && (
+                  <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
+                    {/* Tasks Section */}
+                    <div>
+                      <TaskList 
+                        projectId={project.id} 
+                        onTaskChange={handleTaskChange} 
+                      />
+                    </div>
+                    
+                    {/* Members Section */}
+                    <div className="pt-4 border-t border-gray-200">
+                      <ProjectMembers projectId={project.id} />
+                    </div>
+                    
+                    {/* Chat Section */}
+                    <div className="pt-4 border-t border-gray-200">
+                      <Chat projectId={project.id} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Create Project Modal */}
       {showModal && (
