@@ -122,7 +122,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Task Status Breakdown */}
+          {/* Task Status Breakdown*/}
           {taskStatusBreakdown.length > 0 && (
             <div className="mt-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Task Status Breakdown</h3>
@@ -144,7 +144,7 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Recent Projects Section */}
+          {/* recent Projects Section */}
           {recentProjects.length > 0 && (
             <div className="mt-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Recent Projects</h3>
