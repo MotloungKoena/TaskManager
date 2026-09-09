@@ -10,7 +10,7 @@ namespace TaskManager.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // Require authentication for all endpoints
+    [Authorize] 
     public class ProjectsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -195,6 +195,95 @@ namespace TaskManager.API.Controllers
             return Ok(new { message = "Project deleted successfully" });
         }
 
+        // GET: api/projects/{id}/available-users
+        [HttpGet("{id}/available-users")]
+        public async Task<IActionResult> GetAvailableUsers(int id)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            // Check if user has access to this project
+            var project = await _context.Projects
+                .Include(p => p.Members)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (project == null)
+                return NotFound(new { message = "Project not found" });
+
+            var isMember = project.Members.Any(m => m.UserId == userId);
+            var isCreator = project.CreatedById == userId;
+
+            if (!isMember && !isCreator)
+                return Forbid();
+
+            // Get all users except current user and existing members
+            var existingMemberIds = project.Members.Select(m => m.UserId).ToList();
+            existingMemberIds.Add(userId); // Add current user
+
+            var availableUsers = await _context.Users
+                .Where(u => !existingMemberIds.Contains(u.Id))
+                .Select(u => new
+                {
+                    u.Id,
+                    u.FullName,
+                    u.Email
+                })
+                .Take(20) // Limit results
+                .ToListAsync();
+
+            return Ok(availableUsers);
+        }
+
+        // GET: api/projects/{id}/members
+        [HttpGet("{id}/members")]
+        public async Task<IActionResult> GetMembers(int id)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var project = await _context.Projects
+                .Include(p => p.Members)
+                    .ThenInclude(m => m.User)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (project == null)
+                return NotFound(new { message = "Project not found" });
+
+            var isMember = project.Members.Any(m => m.UserId == userId);
+            var isCreator = project.CreatedById == userId;
+
+            if (!isMember && !isCreator)
+                return Forbid();
+
+            var members = project.Members.Select(m => new
+            {
+                m.UserId,
+                m.User.FullName,
+                m.User.Email,
+                m.Role,
+                m.JoinedAt,
+                IsCreator = project.CreatedById == m.UserId
+            }).ToList();
+
+            // Add creator if not in members list (should already be there)
+            if (!members.Any(m => m.UserId == project.CreatedById))
+            {
+                var creator = await _userManager.FindByIdAsync(project.CreatedById);
+                if (creator != null)
+                {
+                    members.Add(new
+                    {
+                        UserId = creator.Id,
+                        creator.FullName,
+                        creator.Email,
+                        Role = "Admin",
+                        JoinedAt = project.CreatedAt,
+                        IsCreator = true
+                    });
+                }
+            }
+
+            return Ok(members);
+        }
+
         // POST: api/projects/{id}/members
         [HttpPost("{id}/members")]
         public async Task<IActionResult> AddMember(int id, [FromBody] AddMemberModel model)
@@ -238,6 +327,40 @@ namespace TaskManager.API.Controllers
                 message = "Member added successfully",
                 user = new { userToAdd.Id, userToAdd.FullName, userToAdd.Email }
             });
+        }
+
+        // DELETE: api/projects/{id}/members/{memberId}
+        [HttpDelete("{id}/members/{memberId}")]
+        public async Task<IActionResult> RemoveMember(int id, string memberId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var project = await _context.Projects
+                .Include(p => p.Members)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (project == null)
+                return NotFound(new { message = "Project not found" });
+
+            // Check if user is admin or creator
+            var isAdmin = project.Members.Any(m => m.UserId == userId && m.Role == "Admin");
+            var isCreator = project.CreatedById == userId;
+
+            if (!isAdmin && !isCreator)
+                return Forbid();
+
+            // Don't allow removing the creator
+            if (project.CreatedById == memberId)
+                return BadRequest(new { message = "Cannot remove the project creator" });
+
+            var member = project.Members.FirstOrDefault(m => m.UserId == memberId);
+            if (member == null)
+                return NotFound(new { message = "Member not found" });
+
+            project.Members.Remove(member);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Member removed successfully" });
         }
     }
 

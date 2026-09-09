@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { projectsApi } from '../services/api';
 import TaskList from '../components/TaskList';
+import Chat from '../components/Chat';
+import ProjectMembers from '../components/ProjectMembers';   
 import toast from 'react-hot-toast';
 
 const Projects = () => {
@@ -28,9 +30,9 @@ const Projects = () => {
     }
   };
 
-  // ✅ NEW: Refresh projects when tasks change
+  // Refresh projects when tasks change
   const handleTaskChange = async () => {
-    await loadProjects(); // Reload projects to update task counts
+    await loadProjects();
   };
 
   const handleCreateProject = async (e) => {
@@ -61,7 +63,7 @@ const Projects = () => {
     }
   };
 
-  const toggleProjectTasks = (projectId) => {
+  const toggleProjectExpand = (projectId) => {
     setExpandedProject(expandedProject === projectId ? null : projectId);
   };
 
@@ -112,19 +114,31 @@ const Projects = () => {
               </div>
               
               <button
-                onClick={() => toggleProjectTasks(project.id)}
+                onClick={() => toggleProjectExpand(project.id)}
                 className="mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium"
               >
-                {expandedProject === project.id ? 'Hide Tasks' : 'View Tasks'}
+                {expandedProject === project.id ? 'Hide Details' : 'View Details'}
               </button>
               
               {expandedProject === project.id && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  {/* ✅ Pass handleTaskChange to TaskList */}
-                  <TaskList 
-                    projectId={project.id} 
-                    onTaskChange={handleTaskChange} 
-                  />
+                <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
+                  {/* Tasks Section */}
+                  <div>
+                    <TaskList 
+                      projectId={project.id} 
+                      onTaskChange={handleTaskChange} 
+                    />
+                  </div>
+                  
+                  {/* Members Section */}
+                  <div className="pt-4 border-t border-gray-200">
+                    <ProjectMembers projectId={project.id} />
+                  </div>
+                  
+                  {/* Chat Section */}
+                  <div className="pt-4 border-t border-gray-200">
+                    <Chat projectId={project.id} />
+                  </div>
                 </div>
               )}
             </div>

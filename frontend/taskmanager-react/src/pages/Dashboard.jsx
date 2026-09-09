@@ -20,7 +20,11 @@ const Dashboard = () => {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
+      console.log('Fetching dashboard data...');
+      
       const response = await dashboardApi.getSummary();
+      console.log('Dashboard response:', response.data);
+      
       const data = response.data;
       
       setProjectCount(data.projectCount || 0);
@@ -31,6 +35,14 @@ const Dashboard = () => {
       
     } catch (error) {
       console.error('Error loading dashboard data:', error);
+      
+      // Check if it's an authentication error
+      if (error.response?.status === 401) {
+        toast.error('Please login again');
+        logout();
+        return;
+      }
+      
       toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
@@ -122,7 +134,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Task Status Breakdown*/}
+          {/* Task Status Breakdown */}
           {taskStatusBreakdown.length > 0 && (
             <div className="mt-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Task Status Breakdown</h3>
@@ -144,7 +156,7 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* recent Projects Section */}
+          {/* Recent Projects Section */}
           {recentProjects.length > 0 && (
             <div className="mt-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Recent Projects</h3>
@@ -168,6 +180,16 @@ const Dashboard = () => {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+          
+          {/* If no data */}
+          {projectCount === 0 && taskCount === 0 && memberCount === 0 && (
+            <div className="mt-8 p-8 text-center bg-gray-50 rounded-lg">
+              <p className="text-gray-500">Start by creating your first project! 🚀</p>
+              <Link to="/projects" className="inline-block mt-3 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                Go to Projects
+              </Link>
             </div>
           )}
         </div>
