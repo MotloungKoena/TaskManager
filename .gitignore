@@ -1,0 +1,26 @@
+# Visual Studio
+.vs/
+*.suo
+*.user
+bin/
+obj/
+TestResults/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Node
+node_modules/
+dist/
+.env.local
+
+# .NET
+appsettings.Development.json
+*.db
+*.mdf
+*.ldf
+
+# OS
+.DS_Store
+Thumbs.db
