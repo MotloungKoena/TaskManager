@@ -10,7 +10,7 @@ const Projects = () => {
   const [showModal, setShowModal] = useState(false);
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
-  const [expandedProject, setExpandedProject] = useState(null);  
+  const [expandedProject, setExpandedProject] = useState(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -26,6 +26,11 @@ const Projects = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // ✅ NEW: Refresh projects when tasks change
+  const handleTaskChange = async () => {
+    await loadProjects(); // Reload projects to update task counts
   };
 
   const handleCreateProject = async (e) => {
@@ -100,13 +105,12 @@ const Projects = () => {
               <p className="text-gray-600 text-sm mt-2">{project.description || 'No description'}</p>
               <div className="mt-4 flex justify-between text-sm text-gray-500">
                 <span>{project.memberCount || 0} members</span>
-                <span>{project.taskCount || 0} tasks</span>
+                <span className="font-semibold text-blue-600">{project.taskCount || 0} tasks</span>
               </div>
               <div className="mt-2 text-xs text-gray-400">
                 Created {new Date(project.createdAt).toLocaleDateString()}
               </div>
               
-              {/* View Tasks Button */}
               <button
                 onClick={() => toggleProjectTasks(project.id)}
                 className="mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium"
@@ -114,10 +118,13 @@ const Projects = () => {
                 {expandedProject === project.id ? 'Hide Tasks' : 'View Tasks'}
               </button>
               
-              {/* Task List - Only show when expanded */}
               {expandedProject === project.id && (
                 <div className="mt-4 pt-4 border-t border-gray-200">
-                  <TaskList projectId={project.id} />
+                  {/* ✅ Pass handleTaskChange to TaskList */}
+                  <TaskList 
+                    projectId={project.id} 
+                    onTaskChange={handleTaskChange} 
+                  />
                 </div>
               )}
             </div>

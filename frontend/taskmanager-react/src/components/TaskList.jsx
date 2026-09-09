@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { tasksApi } from '../services/api';
 import toast from 'react-hot-toast';
 
-const TaskList = ({ projectId }) => {
+const TaskList = ({ projectId, onTaskChange }) => {  // ← Add onTaskChange prop
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -47,7 +47,9 @@ const TaskList = ({ projectId }) => {
       setPriority('Medium');
       setStatus('Todo');
       setDueDate('');
-      loadTasks();
+      await loadTasks();
+      // Notify parent component to refresh project count
+      if (onTaskChange) onTaskChange();
     } catch (error) {
       toast.error('Failed to create task');
     }
@@ -58,7 +60,9 @@ const TaskList = ({ projectId }) => {
     try {
       await tasksApi.delete(id);
       toast.success('Task deleted');
-      loadTasks();
+      await loadTasks();
+      // Notify parent component to refresh project count
+      if (onTaskChange) onTaskChange();
     } catch (error) {
       toast.error('Failed to delete task');
     }
@@ -68,7 +72,7 @@ const TaskList = ({ projectId }) => {
     try {
       await tasksApi.updateStatus(id, newStatus);
       toast.success('Status updated');
-      loadTasks();
+      await loadTasks();
     } catch (error) {
       toast.error('Failed to update status');
     }
@@ -99,52 +103,51 @@ const TaskList = ({ projectId }) => {
   }
 
   return (
-    <div className="mt-6">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Tasks</h3>
+    <div className="mt-2">
+      <div className="flex justify-between items-center mb-3">
+        <h4 className="text-sm font-semibold text-gray-700">Tasks ({tasks.length})</h4>
         <button
           onClick={() => setShowModal(true)}
-          className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
+          className="px-2 py-1 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700"
         >
           + Add Task
         </button>
       </div>
 
       {tasks.length === 0 ? (
-        <p className="text-gray-500 text-sm">No tasks yet. Add your first task!</p>
+        <p className="text-gray-500 text-xs">No tasks yet.</p>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {tasks.map((task) => (
-            <div key={task.id} className="bg-white border rounded-lg p-4 hover:shadow transition">
+            <div key={task.id} className="bg-gray-50 border rounded-lg p-3 hover:shadow transition">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <div className="flex items-center space-x-3">
-                    <h4 className="font-medium text-gray-900">{task.title}</h4>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${getPriorityColor(task.priority)}`}>
+                  <div className="flex items-center space-x-2 flex-wrap">
+                    <span className="text-sm font-medium text-gray-900">{task.title}</span>
+                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${getPriorityColor(task.priority)}`}>
                       {task.priority}
                     </span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(task.status)}`}>
+                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${getStatusColor(task.status)}`}>
                       {task.status}
                     </span>
                   </div>
                   {task.description && (
-                    <p className="text-sm text-gray-600 mt-1">{task.description}</p>
+                    <p className="text-xs text-gray-600 mt-1">{task.description}</p>
                   )}
-                  <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                  <div className="flex items-center space-x-3 mt-1 text-xs text-gray-500">
                     {task.dueDate && (
                       <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
                     )}
                     {task.assignedTo && (
                       <span>Assigned to: {task.assignedTo.fullName}</span>
                     )}
-                    <span>Created: {new Date(task.createdAt).toLocaleDateString()}</span>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2 ml-4">
+                <div className="flex items-center space-x-1 ml-2">
                   <select
                     value={task.status}
                     onChange={(e) => handleStatusChange(task.id, e.target.value)}
-                    className="text-xs border rounded px-2 py-1"
+                    className="text-xs border rounded px-1 py-0.5"
                   >
                     <option value="Todo">Todo</option>
                     <option value="InProgress">In Progress</option>
@@ -153,9 +156,9 @@ const TaskList = ({ projectId }) => {
                   </select>
                   <button
                     onClick={() => handleDeleteTask(task.id)}
-                    className="text-red-500 hover:text-red-700 text-sm"
+                    className="text-red-500 hover:text-red-700 text-xs"
                   >
-                    Delete
+                    ×
                   </button>
                 </div>
               </div>

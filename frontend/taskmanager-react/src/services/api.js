@@ -47,4 +47,9 @@ export const tasksApi = {
   updateStatus: (id, status) => api.patch(`/Tasks/${id}/status`, { status }),
 };
 
+// Dashboard API
+export const dashboardApi = {
+  getSummary: () => api.get('/Dashboard/summary'),
+};
+
 export default api;
